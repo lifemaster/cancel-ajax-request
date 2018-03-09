@@ -2,6 +2,8 @@ const requestInput = document.getElementById('request-input');
 const countInput = document.getElementById('count-input');
 const galleryList = document.getElementById('gallery-list');
 
+let executingXHR;
+
 requestInput.addEventListener('input', inputHandler);
 countInput.addEventListener('input', inputHandler);
 
@@ -25,16 +27,28 @@ function sendRequest(query, count) {
   const xhr = new XMLHttpRequest();
 
   xhr.open('GET', url);
+
+  // abort previous xhr if it is executing
+  if (executingXHR) {
+    executingXHR.abort();
+  }
+
+  // save xhr before send
+  executingXHR = xhr;
+
   xhr.send();
 
   xhr.onreadystatechange = () => {
     if (xhr.readyState != 4) return;
 
     if (xhr.status != 200) {
-      console.error(xhr.status + ': ' + xhr.statusText);
+      console.error(`An error has occurred. Code: ${xhr.status}. Message: ${xhr.statusText}`);
     } else {
       const res = xhr.responseText;
       const data = JSON.parse(res);
+
+      // remove xhr after funishing successfully
+      executingXHR = null;
 
       galleryList.innerHTML = '';
       data.data.forEach(img => {
